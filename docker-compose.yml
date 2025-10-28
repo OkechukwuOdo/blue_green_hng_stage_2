@@ -1,39 +1,47 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  nginx:
-    image: nginx:1.26
-    container_name: nginx
-    ports:
-      - "8080:80"
-    depends_on:
-      - app_blue
-      - app_green
-    environment:
-      - ACTIVE_POOL=${ACTIVE_POOL}
-      - BLUE_HOST=app_blue
-      - GREEN_HOST=app_green
-      - BLUE_PORT=${PORT}
-      - GREEN_PORT=${PORT}
-    volumes:
-      - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
-      - ./entrypoint.sh:/entrypoint.sh:ro
-    entrypoint: ["/bin/bash", "/entrypoint.sh"]
-
   app_blue:
     image: ${BLUE_IMAGE}
     container_name: app_blue
     environment:
-      - PORT=${PORT}
       - RELEASE_ID=${RELEASE_ID_BLUE}
+      - PORT=${PORT}
     ports:
       - "8081:${PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
 
   app_green:
     image: ${GREEN_IMAGE}
     container_name: app_green
     environment:
-      - PORT=${PORT}
       - RELEASE_ID=${RELEASE_ID_GREEN}
+      - PORT=${PORT}
     ports:
       - "8082:${PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_gateway
+    depends_on:
+      - app_blue
+      - app_green
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/templates/nginx.conf.template
+    environment:
+      - ACTIVE_POOL=${ACTIVE_POOL}
+      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+    command: >
+      /bin/sh -c "envsubst '$$ACTIVE_POOL' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
