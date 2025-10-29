@@ -30,10 +30,7 @@ This project implements a Blue/Green deployment strategy for a Node.js applicati
 .
 ├── docker-compose.yml          # Main orchestration file
 ├── .env                        # Environment variables
-├── nginx/
-│   ├── Dockerfile             # Nginx container build file
-│   ├── nginx.conf.template    # Nginx configuration template
-│   └── x.sh                   # Template substitution script
+├── nginx.conf.template    # Nginx configuration template      
 └── README.md
 ```
 
@@ -106,10 +103,6 @@ curl -X POST http://localhost:8081/chaos/stop
 ## Deployment
 
 ### 1. Clone and Setup
-
-```bash
-cd HNG13_DevOps_Stage_2
-```
 
 ### 2. Configure Environment
 
@@ -266,18 +259,3 @@ for ($i=1; $i -le 10; $i++) {
 # Stop chaos
 curl -X POST http://localhost:8081/chaos/stop
 ```
-
-## CI/CD Considerations
-
-The setup is designed to work with automated CI/CD pipelines:
-
-- All configuration via `.env` (no hardcoded values)
-- Supports different image tags per environment
-- Fast health checks for quick verification
-- Deterministic failover behavior
-
-## Additional Resources
-
-- [Nginx Upstream Documentation](http://nginx.org/en/docs/http/ngx_http_upstream_module.html)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [HNG Internship](https://hng.tech/internship)
